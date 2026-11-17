@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MD Reader — a fast, clean Markdown reader for Windows</title>
+<meta name="description" content="Free and open-source Markdown reader and editor for Windows. Tabs, table of contents, code highlighting, math, Mermaid diagrams, dark mode, live reload.">
+<meta property="og:title" content="MD Reader — Markdown reader for Windows">
+<meta property="og:description" content="Free, open-source, fast. Tabs, outline, math, diagrams, dark mode, quick edit.">
+<meta property="og:image" content="https://himmatilloxon.github.io/md-reader/screenshots/light.png">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #ffffff; --bg-soft: #f5f6f8; --card: #ffffff; --border: #e3e5e9;
+    --text: #1f2328; --strong: #0b0f17; --muted: #5d6570;
+    --accent: #3f5ef0; --accent-ink: #ffffff; --accent-soft: rgba(63, 94, 240, .09);
+    --code-bg: #f1f3f6; --warn: #9a6700; --warn-bg: #fff8e5;
+    --shadow: 0 24px 60px rgba(20, 30, 60, .16), 0 2px 8px rgba(20, 30, 60, .06);
+    --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111318; --bg-soft: #171a20; --card: #191c23; --border: #2a2e37;
+      --text: #dce0e6; --strong: #f4f6f9; --muted: #969daa;
+      --accent: #7f97ff; --accent-ink: #0b0f17; --accent-soft: rgba(127, 151, 255, .12);
+      --code-bg: #20242c; --warn: #e3b341; --warn-bg: #2a2412;
+      --shadow: 0 24px 60px rgba(0, 0, 0, .55), 0 2px 8px rgba(0, 0, 0, .4);
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 var(--font); -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  img { max-width: 100%; display: block; }
+  code, kbd { font-family: var(--mono); font-size: .88em; }
+  code { background: var(--code-bg); padding: .12em .4em; border-radius: 5px; }
+  kbd { border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px; padding: .05em .4em; background: var(--bg-soft); white-space: nowrap; }
+  .wrap { width: min(1080px, 100%); margin: 0 auto; padding: 0 16px; }
+
+  header.top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 85%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  header.top .wrap { display: flex; align-items: center; gap: 20px; height: 58px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; color: var(--strong); font-size: 17px; }
+  .brand img { width: 28px; height: 28px; }
+  .brand:hover { text-decoration: none; }
+  nav.links { margin-left: auto; display: flex; gap: 22px; font-size: 15px; }
+  nav.links a { color: var(--muted); }
+  nav.links a:hover { color: var(--text); text-decoration: none; }
+
+  .hero { padding: 72px 0 40px; text-align: center; }
+  .hero .logo { width: 84px; height: 84px; margin: 0 auto 22px; }
+  .hero h1 { font-size: clamp(34px, 6vw, 56px); line-height: 1.1; margin: 0 0 16px; color: var(--strong); letter-spacing: -.02em; font-weight: 700; }
+  .hero p.lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--muted); max-width: 640px; margin: 0 auto 30px; }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 9px; height: 48px; padding: 0 22px; border-radius: 11px; font-weight: 600; font-size: 16px; border: 1px solid var(--border); color: var(--text); background: var(--card); }
+  .btn:hover { text-decoration: none; border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { filter: brightness(1.07); }
+  .btn svg { width: 19px; height: 19px; }
+  .meta { margin-top: 16px; font-size: 14px; color: var(--muted); }
+  .meta span + span::before { content: "·"; margin: 0 8px; }
+
+  .shot { margin: 34px auto 0; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); }
+  .shots-tabs { display: flex; gap: 6px; justify-content: center; margin-top: 44px; flex-wrap: wrap; }
+  .shots-tabs button { font: inherit; font-size: 14px; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--border); background: var(--card); color: var(--muted); cursor: pointer; }
+  .shots-tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-weight: 600; }
+
+  section { padding: 72px 0; }
+  section.alt { background: var(--bg-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  h2 { font-size: clamp(26px, 3.6vw, 34px); color: var(--strong); margin: 0 0 10px; letter-spacing: -.01em; }
+  .sub { color: var(--muted); margin: 0 0 36px; max-width: 640px; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+  .card h3 { margin: 12px 0 6px; font-size: 17px; color: var(--strong); }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .ico { width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+  .ico svg { width: 20px; height: 20px; }
+
+  .steps { counter-reset: step; display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+  .steps > li { counter-increment: step; position: relative; padding: 20px 22px 20px 70px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; }
+  .steps > li::before { content: counter(step); position: absolute; left: 20px; top: 18px; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-size: 15px; }
+  .steps h3 { margin: 2px 0 6px; font-size: 17px; color: var(--strong); }
+  .steps p { margin: 0 0 6px; color: var(--muted); }
+  .steps p:last-child { margin-bottom: 0; }
+  .note { margin-top: 10px; padding: 12px 14px; border-radius: 10px; background: var(--warn-bg); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); font-size: 14.5px; color: var(--text); }
+  .note strong { color: var(--warn); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 28px; }
+  pre { margin: 10px 0 0; padding: 14px 16px; background: var(--code-bg); border-radius: 10px; overflow-x: auto; font: 14px/1.6 var(--mono); }
+  pre code { background: none; padding: 0; font-size: 1em; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  td { padding: 10px 16px; border-top: 1px solid var(--border); vertical-align: top; }
+  tr:first-child td { border-top: 0; }
+  td:first-child { white-space: nowrap; width: 1%; }
+  .faq details { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+  .faq summary { cursor: pointer; font-weight: 600; color: var(--strong); }
+  .faq details p { margin: 10px 0 0; color: var(--muted); }
+
+  footer { padding: 36px 0 48px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--border); }
+  footer .wrap { display: flex; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
+
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+    .two { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    nav.links a:not(.gh) { display: none; }
+    .grid { grid-template-columns: 1fr; }
+    .hero { padding-top: 48px; }
+    .steps > li { padding: 62px 18px 18px; }
+    .steps > li::before { top: 18px; left: 18px; }
+    td:first-child { white-space: normal; }
+    .btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="logo.svg" alt="">MD Reader</a>
+    <nav class="links">
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="#shortcuts">Shortcuts</a>
+      <a href="#faq">FAQ</a>
+      <a class="gh" href="https://github.com/Himmatilloxon/md-reader">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="wrap">
+      <img class="logo" src="logo.svg" alt="MD Reader logo">
+      <h1>A Markdown reader for Windows<br>that just works.</h1>
+      <p class="lead">Fast, clean and free. Open any <code>.md</code> file and read it the way it was meant to look, with tabs, an outline, code highlighting, math, diagrams and a quick editor when you need it.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/Himmatilloxon/md-reader/releases/latest/download/MDReader-win-x64.zip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+          Download for Windows
+        </a>
+        <a class="btn" href="https://github.com/Himmatilloxon/md-reader">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
+          View source
+        </a>
+      </div>
+      <div class="meta"><span id="version">Latest release</span><span>Windows 10 &amp; 11 (x64)</span><span>MIT licensed</span></div>
+
+      <div class="shots-tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-shot="light">Reading</button>
+        <button role="tab" aria-selected="false" data-shot="dark">Dark mode, math &amp; diagrams</button>
+        <button role="tab" aria-selected="false" data-shot="edit">Quick edit</button>
+      </div>
+      <div class="shot"><img id="shot" src="screenshots/light.png" width="1400" height="789" alt="MD Reader showing a Markdown document with a table of contents sidebar"></div>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="wrap">
+      <h2>Everything you want, nothing you don't</h2>
+      <p class="sub">A single small app. No account, no ads, no telemetry. It works fully offline.</p>
+      <div class="grid">
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></div><h3>Beautiful reading</h3><p>GitHub-style rendering with tables, task lists, footnotes, alerts and front matter. It follows your Windows light or dark theme.</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v5"/></svg></div><h3>Tabs &amp; recent files</h3><p>Open many files at once. Your tabs are restored next time, and double-clicking another file adds a tab instead of a new window.</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></div><h3>Table of contents</h3><p>A clickable outline built from the headings, which highlights where you are as you scroll.</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg></div><h3>Code, math, diagrams</h3><p>Syntax highlighting for about 190 languages with a copy button, LaTeX math through KaTeX, and Mermaid flowcharts and sequence diagrams.</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div><h3>Quick edit</h3><p>Press <kbd>Ctrl</kbd>+<kbd>E</kbd> for a side-by-side editor with a live preview and synced scrolling. Saving keeps your file's encoding and line endings.</p></div>
+        <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div><h3>Live reload</h3><p>If another program changes the file, the page updates on its own. If you also have unsaved edits, it asks which version to keep.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install" class="alt">
+    <div class="wrap">
+      <h2>Install in a minute</h2>
+      <p class="sub">The installer only sets things up for your own user account, so it doesn't need administrator rights.</p>
+
+      <ol class="steps">
+        <li>
+          <h3>Download</h3>
+          <p>Get <a href="https://github.com/Himmatilloxon/md-reader/releases/latest/download/MDReader-win-x64.zip"><code>MDReader-win-x64.zip</code></a> from the <a href="https://github.com/Himmatilloxon/md-reader/releases/latest">latest release</a>.</p>
+        </li>
+        <li>
+          <h3>Unzip it</h3>
+          <p>Right-click the zip and choose <strong>Extract All…</strong>. Running the installer from inside the zip won't work.</p>
+        </li>
+        <li>
+          <h3>Double-click <code>install.cmd</code></h3>
+          <p>This copies MD Reader into <code>%LOCALAPPDATA%\Programs\MD Reader</code>, adds it to the Start menu, and registers it for <code>.md</code> files. When it finishes, it opens the Windows <em>Default apps</em> page.</p>
+          <div class="note"><strong>“Windows protected your PC”?</strong> The app isn't code-signed yet, so SmartScreen warns about new downloads. Click <strong>More info → Run anyway</strong>. You can read every line of the installer in <a href="https://github.com/Himmatilloxon/md-reader/blob/main/install.ps1"><code>install.ps1</code></a>.</div>
+        </li>
+        <li>
+          <h3>Make it your default for .md files</h3>
+          <p>Windows doesn't let apps set themselves as the default, so you choose it once:</p>
+          <p>Right-click any <code>.md</code> file → <strong>Open with</strong> → <strong>Choose another app</strong> → pick <strong>MD Reader</strong> → click <strong>Always</strong>.</p>
+          <p>Or go to <strong>Settings → Apps → Default apps → MD Reader</strong> and set <code>.md</code> and <code>.markdown</code>.</p>
+        </li>
+      </ol>
+
+      <div class="two">
+        <div class="card">
+          <h3>Requirements</h3>
+          <p>Windows 10 or 11 (64-bit), plus:</p>
+          <p>• <a href="https://dotnet.microsoft.com/download/dotnet/8.0">.NET 8 Desktop Runtime (x64)</a>. If it's missing, Windows offers to download it the first time you start the app.<br>
+             • <a href="https://developer.microsoft.com/microsoft-edge/webview2/">Edge WebView2 Runtime</a>, which Windows 11 already includes.</p>
+        </div>
+        <div class="card">
+          <h3>Portable, no install</h3>
+          <p>Just want the app? Download <a href="https://github.com/Himmatilloxon/md-reader/releases/latest/download/MDReader.exe"><code>MDReader.exe</code></a> and run it from anywhere. Drag <code>.md</code> files onto the window to open them.</p>
+        </div>
+        <div class="card">
+          <h3>Uninstall</h3>
+          <p>Go to <strong>Settings → Apps → Installed apps → MD Reader → Uninstall</strong>, or run <code>uninstall.cmd</code> from the zip. Your settings are kept in <code>%APPDATA%\MDReader</code> unless you run <code>uninstall.ps1 -Purge</code>.</p>
+        </div>
+        <div class="card">
+          <h3>Update</h3>
+          <p>Download the newest zip and run <code>install.cmd</code> again. It replaces the old version and keeps your settings and open tabs.</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3>Build from source</h3>
+        <p>You'll need the <a href="https://dotnet.microsoft.com/download/dotnet/8.0">.NET 8 SDK</a>.</p>
+<pre><code>git clone https://github.com/Himmatilloxon/md-reader.git
+cd md-reader
+.\build.ps1      # creates dist\MDReader.exe
+.\install.ps1    # optional: install it for your user</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="shortcuts">
+    <div class="wrap">
+      <h2>Keyboard shortcuts</h2>
+      <p class="sub">You can do everything from the keyboard.</p>
+      <table>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>O</kbd> / <kbd>Ctrl</kbd>+<kbd>N</kbd></td><td>Open / new file</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd></td><td>Save / save as</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>E</kbd></td><td>Switch between reading and editing</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>\</kbd></td><td>Show or hide the table of contents</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>F</kbd>, <kbd>F3</kbd> / <kbd>Shift</kbd>+<kbd>F3</kbd></td><td>Find, next, previous</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>Tab</kbd>, <kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>9</kbd></td><td>Switch tabs</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>W</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd></td><td>Close tab / reopen closed tab</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>R</kbd></td><td>Reload from disk</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td><td>Print or save as PDF</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>=</kbd> / <kbd>Ctrl</kbd>+<kbd>-</kbd> / <kbd>Ctrl</kbd>+<kbd>0</kbd></td><td>Zoom in / out / reset (or <kbd>Ctrl</kbd>+mouse wheel)</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd> / <kbd>I</kbd> / <kbd>K</kbd></td><td>Bold / italic / link while editing</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="faq" class="alt faq">
+    <div class="wrap">
+      <h2>FAQ</h2>
+      <p class="sub">&nbsp;</p>
+      <details><summary>Is it really free?</summary><p>Yes. It's open source under the MIT license, with no ads, no account and no tracking. The app never connects to the internet unless a document links to images online.</p></details>
+      <details><summary>Is it safe to open Markdown files from strangers?</summary><p>Yes. HTML inside documents is sanitized, so scripts never run. Clicking a link to a program or script only shows it in File Explorer instead of running it.</p></details>
+      <details><summary>Why does SmartScreen warn me?</summary><p>The exe isn't code-signed, and signing certificates cost money. SmartScreen warns about any new, unsigned download. The source code and the build that produces each release are public. Each release is built by <a href="https://github.com/Himmatilloxon/md-reader/actions">GitHub Actions</a> straight from the source.</p></details>
+      <details><summary>Which Markdown features are supported?</summary><p>CommonMark, plus GitHub tables, task lists, strikethrough, autolinks, footnotes, alerts (<code>&gt; [!NOTE]</code>), <code>&lt;details&gt;</code>, YAML front matter, KaTeX math (<code>$…$</code>, <code>$$…$$</code>, <code>```math</code>) and Mermaid diagrams (<code>```mermaid</code>).</p></details>
+      <details><summary>Where are my settings stored?</summary><p>In <code>%APPDATA%\MDReader\settings.json</code>: theme, zoom, recent files, open tabs and window position.</p></details>
+      <details><summary>I found a bug or want a feature.</summary><p>Please <a href="https://github.com/Himmatilloxon/md-reader/issues/new">open an issue</a>. Pull requests are welcome too.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>MD Reader · MIT License · by <a href="https://github.com/Himmatilloxon">Himmatilloxon</a></span>
+    <span><a href="https://github.com/Himmatilloxon/md-reader/releases">All releases</a> · <a href="https://github.com/Himmatilloxon/md-reader/issues">Issues</a> · <a href="https://github.com/Himmatilloxon/md-reader/blob/main/THIRD_PARTY_NOTICES.md">Third-party notices</a></span>
+  </div>
+</footer>
+
+<script>
+  // screenshot switcher
+  const shot = document.getElementById('shot');
+  const alts = { light: 'MD Reader showing a Markdown document with a table of contents sidebar', dark: 'MD Reader in dark mode rendering math and a Mermaid diagram', edit: 'MD Reader split editor with live preview' };
+  document.querySelectorAll('[data-shot]').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-shot]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    shot.src = 'screenshots/' + b.dataset.shot + '.png';
+    shot.alt = alts[b.dataset.shot];
+  }));
+  // show the latest version number (optional; page works without it)
+  fetch('https://api.github.com/repos/Himmatilloxon/md-reader/releases/latest')
+    .then(r => r.ok ? r.json() : null)
+    .then(r => { if (r && r.tag_name) document.getElementById('version').textContent = 'Version ' + r.tag_name.replace(/^v/, ''); })
+    .catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MD Reader</title>
+<script>
+  (function () {
+    var report = function (m) { try { window.chrome.webview.postMessage({ type: 'log', message: String(m) }); } catch (e) {} };
+    window.addEventListener('error', function (e) { report((e.message || e) + ' @ ' + (e.filename || '') + ':' + (e.lineno || '')); });
+    window.addEventListener('unhandledrejection', function (e) { report('unhandled: ' + (e.reason && (e.reason.stack || e.reason.message) || e.reason)); });
+  })();
+</script>
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="vendor/hljs-light.css" id="hljs-light">
+<link rel="stylesheet" href="vendor/hljs-dark.css" id="hljs-dark" disabled>
+<link rel="stylesheet" href="vendor/codemirror/codemirror.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app" class="mode-view">
+  <header id="topbar">
+    <div id="tabs" role="tablist"></div>
+    <div class="actions">
+      <button class="icon-btn" data-cmd="new" title="New file (Ctrl+N)" data-icon="plus"></button>
+      <button class="icon-btn" data-cmd="open" title="Open file (Ctrl+O)" data-icon="folder"></button>
+      <button class="icon-btn" data-cmd="recent" title="Recent files" data-icon="clock"></button>
+      <span class="sep"></span>
+      <button class="icon-btn" data-cmd="toc" title="Contents sidebar (Ctrl+\)" data-icon="list" id="btn-toc"></button>
+      <button class="icon-btn" data-cmd="edit" title="Edit / Read (Ctrl+E)" data-icon="pen" id="btn-edit"></button>
+      <button class="icon-btn" data-cmd="find" title="Find (Ctrl+F)" data-icon="search"></button>
+      <button class="icon-btn" data-cmd="theme" title="Theme" data-icon="sun" id="btn-theme"></button>
+      <button class="icon-btn" data-cmd="menu" title="More" data-icon="dots"></button>
+    </div>
+  </header>
+
+  <div id="banner" hidden>
+    <span id="banner-text"></span>
+    <span class="banner-actions"></span>
+  </div>
+
+  <main id="main">
+    <aside id="sidebar">
+      <div class="side-head">Contents</div>
+      <nav id="toc"></nav>
+    </aside>
+    <section id="editor-pane"><div id="editor"></div></section>
+    <div id="splitter" title="Drag to resize"></div>
+    <section id="view-pane" tabindex="-1">
+      <article id="doc" class="markdown-body"></article>
+    </section>
+
+    <section id="welcome">
+      <div class="welcome-inner">
+        <div class="logo"><img src="logo.svg" alt=""></div>
+        <h1>MD Reader</h1>
+        <p class="sub">Open a Markdown file, or drop one anywhere in this window.</p>
+        <div class="welcome-buttons">
+          <button class="btn primary" data-cmd="open"><i data-icon="folder"></i>Open file</button>
+          <button class="btn" data-cmd="new"><i data-icon="plus"></i>New file</button>
+        </div>
+        <div id="welcome-recent"></div>
+        <div class="shortcuts">
+          <div><kbd>Ctrl</kbd><kbd>O</kbd> Open</div>
+          <div><kbd>Ctrl</kbd><kbd>E</kbd> Edit / read</div>
+          <div><kbd>Ctrl</kbd><kbd>F</kbd> Find</div>
+          <div><kbd>Ctrl</kbd><kbd>\</kbd> Contents</div>
+          <div><kbd>Ctrl</kbd><kbd>+</kbd><kbd>−</kbd> Zoom</div>
+          <div><kbd>Ctrl</kbd><kbd>P</kbd> Print / PDF</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="status">
+    <span id="status-left"></span>
+    <span id="status-right"></span>
+  </footer>
+
+  <div id="findbar" hidden>
+    <input id="find-input" type="text" placeholder="Find" spellcheck="false" autocomplete="off">
+    <span id="find-count"></span>
+    <button class="icon-btn small" id="find-prev" title="Previous (Shift+Enter)" data-icon="up"></button>
+    <button class="icon-btn small" id="find-next" title="Next (Enter)" data-icon="down"></button>
+    <button class="icon-btn small" id="find-close" title="Close (Esc)" data-icon="x"></button>
+  </div>
+
+  <div id="popover" hidden></div>
+  <div id="modal-backdrop" hidden><div id="modal" role="dialog" aria-modal="true"></div></div>
+  <div id="toast" hidden></div>
+  <div id="drop-overlay" hidden><div>Drop to open</div></div>
+</div>
+
+<script src="vendor/markdown-it.min.js"></script>
+<script src="vendor/markdown-it-footnote.min.js"></script>
+<script src="vendor/purify.min.js"></script>
+<script src="vendor/highlight.min.js"></script>
+<script src="vendor/katex/katex.min.js"></script>
+<script src="vendor/codemirror/codemirror.js"></script>
+<script src="vendor/codemirror/overlay.js"></script>
+<script src="vendor/codemirror/xml.js"></script>
+<script src="vendor/codemirror/markdown.js"></script>
+<script src="vendor/codemirror/gfm.js"></script>
+<script src="vendor/codemirror/continuelist.js"></script>
+<script src="vendor/codemirror/searchcursor.js"></script>
+<script src="render.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '**.md']
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet publish src/MDReader/MDReader.csproj -c Release -o out -nologo
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MDReader
+          path: out/MDReader.exe

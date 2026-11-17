@@ -1,0 +1,65 @@
+name: Release
+
+# Push a tag like v1.2.0 to build MDReader.exe and publish a GitHub release.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.0.1). Created from the selected branch if it does not exist.'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Resolve version
+        id: v
+        shell: pwsh
+        run: |
+          $tag = if ('${{ github.event_name }}' -eq 'workflow_dispatch') { '${{ inputs.tag }}' } else { '${{ github.ref_name }}' }
+          $ver = $tag.TrimStart('v')
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "version=$ver" >> $env:GITHUB_OUTPUT
+
+      - name: Build
+        shell: pwsh
+        run: |
+          dotnet publish src/MDReader/MDReader.csproj -c Release -o out -nologo -p:Version=${{ steps.v.outputs.version }}
+          New-Item -ItemType Directory pkg | Out-Null
+          Copy-Item out/MDReader.exe, install.ps1, uninstall.ps1, install.cmd, uninstall.cmd, LICENSE pkg/
+          Compress-Archive pkg/* MDReader-win-x64.zip
+          Copy-Item out/MDReader.exe MDReader.exe
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = '${{ steps.v.outputs.tag }}'
+          $zip = "MDReader-win-x64.zip"
+          $notes = @"
+          ## Download
+
+          - **$zip**: app + installer. Unzip, then double-click ``install.cmd`` (adds a Start menu entry and registers it for .md files).
+          - **MDReader.exe**: portable, just run it.
+
+          Requires Windows 10/11 with the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) (x64). Windows 11 already includes the WebView2 runtime.
+          "@
+          $notes | Set-Content notes.md
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $zip MDReader.exe --clobber
+          } else {
+            gh release create $tag $zip MDReader.exe --title "MD Reader $tag" --notes-file notes.md --target ${{ github.sha }}
+          }
