@@ -17,9 +17,9 @@ jobs:
   release:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '8.0.x'
 
@@ -57,9 +57,16 @@ jobs:
           Requires Windows 10/11 with the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) (x64). Windows 11 already includes the WebView2 runtime.
           "@
           $notes | Set-Content notes.md
-          gh release view $tag 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            gh release upload $tag $zip MDReader.exe --clobber
-          } else {
-            gh release create $tag $zip MDReader.exe --title "MD Reader $tag" --notes-file notes.md --target ${{ github.sha }}
+          # retry: the GitHub API occasionally returns transient 5xx errors
+          for ($i = 1; $i -le 5; $i++) {
+            gh release view $tag *> $null
+            if ($LASTEXITCODE -eq 0) {
+              gh release upload $tag $zip MDReader.exe --clobber
+            } else {
+              gh release create $tag $zip MDReader.exe --title "MD Reader $tag" --notes-file notes.md --target ${{ github.sha }}
+            }
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            Write-Host "Attempt $i failed, retrying in 15s..."
+            Start-Sleep 15
           }
+          exit 1
